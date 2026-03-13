@@ -20,6 +20,8 @@ export type DeliverMessageInput = {
   taskId?: string;
   priority?: "low" | "normal" | "high";
   spawnIfNeeded?: boolean;
+  maxAttempts?: number;
+  compatibleTransportIds?: string[];
 };
 
 export async function deliverMessage(
@@ -27,6 +29,9 @@ export async function deliverMessage(
   runtime: any,
   input: DeliverMessageInput,
 ) {
+  const maxAttempts = normalizeMaxAttempts(input.maxAttempts);
+  const compatibleTransportIds = resolveCompatibleTransportIds(runtime, input.compatibleTransportIds);
+
   const delivery = createDelivery(db, {
     fromAgentId: input.fromAgentId,
     toAgentId: input.toAgentId,
@@ -34,12 +39,14 @@ export async function deliverMessage(
     priority: input.priority,
     scopeTaskId: input.taskId,
     dedupeKey: `${input.fromAgentId ?? "unknown"}:${input.toAgentId}:${input.taskId ?? "global"}:${input.messageBody}`,
+    maxAttempts,
   });
 
   const resolved = resolveTargetEndpoints(db, {
     fromAgentId: input.fromAgentId,
     toAgentId: input.toAgentId,
     taskId: input.taskId,
+    compatibleTransportIds,
   });
 
   if (resolved.length === 0) {
@@ -50,6 +57,7 @@ export async function deliverMessage(
         messageBody: input.messageBody,
         targetAgentId: input.toAgentId,
         spawnIfNeeded: input.spawnIfNeeded,
+        compatibleTransportIds,
       }),
     };
   }
@@ -57,8 +65,9 @@ export async function deliverMessage(
   markDeliveryState(db, delivery.delivery_id, "dispatched");
 
   let lastError = "delivery failed";
+  const attemptedEndpoints = resolved.slice(0, maxAttempts);
 
-  for (const [index, candidate] of resolved.entries()) {
+  for (const [index, candidate] of attemptedEndpoints.entries()) {
     const { endpoint, reason } = candidate;
     const startedAt = Date.now();
 
@@ -105,6 +114,7 @@ export async function deliverMessage(
         runId: result?.runId,
         resolution: reason,
         attemptCount: index + 1,
+        maxAttempts,
         state: "acked" as const,
         delivery: getDelivery(db, delivery.delivery_id),
       };
@@ -125,10 +135,17 @@ export async function deliverMessage(
     }
   }
 
-  markDeliveryState(db, delivery.delivery_id, "failed", { error: lastError });
+  const finalReason = buildFailureReason({
+    requestedAttempts: maxAttempts,
+    attemptedCount: attemptedEndpoints.length,
+    availableCount: resolved.length,
+    lastError,
+  });
+
+  markDeliveryState(db, delivery.delivery_id, "failed", { error: finalReason });
   deadLetterDelivery(db, {
     deliveryId: delivery.delivery_id,
-    reason: lastError,
+    reason: finalReason,
     originalMessage: input.messageBody,
   });
 
@@ -138,11 +155,54 @@ export async function deliverMessage(
     ok: false,
     deliveryId: delivery.delivery_id,
     target: input.toAgentId,
-    endpointId: finalDelivery?.endpoint_id ?? resolved.at(-1)?.endpoint.endpoint_id ?? null,
+    endpointId: finalDelivery?.endpoint_id ?? attemptedEndpoints.at(-1)?.endpoint.endpoint_id ?? resolved.at(-1)?.endpoint.endpoint_id ?? null,
     resolution: resolved[0]?.reason,
-    attemptCount: resolved.length,
+    attemptCount: attemptedEndpoints.length,
+    maxAttempts,
     state: "dead_lettered" as const,
-    error: lastError,
+    error: finalReason,
     delivery: finalDelivery,
   };
+}
+
+function normalizeMaxAttempts(maxAttempts?: number) {
+  if (!Number.isFinite(maxAttempts)) return 3;
+  return Math.max(1, Math.floor(maxAttempts as number));
+}
+
+function resolveCompatibleTransportIds(runtime: any, compatibleTransportIds?: string[]) {
+  const explicit = normalizeTransportIds(compatibleTransportIds);
+  if (explicit?.length) return explicit;
+
+  const runtimeTransports = normalizeTransportIds(runtime?.mycelium?.compatibleTransportIds);
+  if (runtimeTransports?.length) return runtimeTransports;
+
+  return undefined;
+}
+
+function normalizeTransportIds(transportIds?: unknown): string[] | undefined {
+  if (!Array.isArray(transportIds)) return undefined;
+  const normalized = transportIds
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return normalized.length ? normalized : undefined;
+}
+
+function buildFailureReason(input: {
+  requestedAttempts: number;
+  attemptedCount: number;
+  availableCount: number;
+  lastError: string;
+}) {
+  if (input.attemptedCount === 0) {
+    return input.lastError;
+  }
+
+  if (input.availableCount > input.attemptedCount) {
+    return `${input.lastError}; retry policy stopped after ${input.attemptedCount}/${input.requestedAttempts} attempts`;
+  }
+
+  return input.lastError;
 }

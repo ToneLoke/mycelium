@@ -20,6 +20,7 @@ Mycelium provides:
 
 Implemented now:
 - `mycelium_send` tool backed by SQLite endpoint resolution with healthy-endpoint retry
+- explicit retry policy controls (`maxAttempts`) and compatible transport filtering (`compatibleTransports`)
 - `agents`, `transport_adapters`, `endpoints`, `conversation_bindings`, `deliveries`, `delivery_attempts`, and `dead_letters` tables
 - lifecycle hooks for `session_start`, `session_end`, `message_sent`, `subagent_spawned`, `subagent_ended`, and `subagent_delivery_target`
 - `/mycelium status` command when the host runtime exposes `registerCommand()`
@@ -34,6 +35,19 @@ That gap is intentional. v1 does real endpoint resolution and delivery journalin
 
 ## Install
 
+This package is still in plugin-scaffold shape. The repo itself is the reliable way to run it right now.
+
+```bash
+git clone <repo-url> mycelium
+cd mycelium
+npm install
+npm run build
+```
+
+Then load the built plugin through your local OpenClaw/plugin dev flow.
+
+If/when the package is published, the install path should become:
+
 ```bash
 npm install @openclaw/mycelium
 openclaw plugin install @openclaw/mycelium
@@ -44,10 +58,11 @@ openclaw plugin install @openclaw/mycelium
 ```bash
 npm install
 npm run typecheck
+npm test
 npm run build
 ```
 
-## Example
+## Public tool contract
 
 ```ts
 mycelium_send({
@@ -56,17 +71,28 @@ mycelium_send({
   taskId: "OPS-12",
   priority: "high",
   spawnIfNeeded: false,
+  maxAttempts: 2,
+  compatibleTransports: ["openclaw-session"],
 });
 ```
+
+Arguments:
+- `to` — stable target agent id
+- `message` — message body passed to `runtime.subagent.run()`
+- `taskId` — optional task-scoped binding hint
+- `priority` — `low | normal | high`
+- `spawnIfNeeded` — keeps the request honest; if no live endpoint exists, v1 dead-letters instead of faking spawn
+- `maxAttempts` — cap retries across resolved healthy endpoints; defaults to `3`
+- `compatibleTransports` — optional allowlist of transport adapter ids to consider
 
 Send flow:
 1. create a delivery record
 2. check for a task-scoped conversation binding
-3. resolve the best healthy endpoint from SQLite
+3. resolve healthy endpoints, filtered by compatible transport if requested
 4. dispatch through `runtime.subagent.run()`
-5. retry the next healthy endpoint if one transport attempt fails
+5. retry the next healthy compatible endpoint if a transport attempt fails and retry budget remains
 6. record attempts/results and update endpoint health
-7. dead-letter if no endpoint exists or all healthy endpoints fail
+7. dead-letter if no compatible endpoint exists or the retry budget is exhausted
 
 ## Architecture summary
 

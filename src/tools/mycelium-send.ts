@@ -7,6 +7,8 @@ export type MyceliumSendInput = {
   taskId?: string;
   priority?: "low" | "normal" | "high";
   spawnIfNeeded?: boolean;
+  maxAttempts?: number;
+  compatibleTransports?: string[];
 };
 
 export function createMyceliumSendTool(db: MyceliumDb) {
@@ -21,6 +23,11 @@ export function createMyceliumSendTool(db: MyceliumDb) {
         taskId: { type: "string" },
         priority: { type: "string", enum: ["low", "normal", "high"] },
         spawnIfNeeded: { type: "boolean" },
+        maxAttempts: { type: "integer", minimum: 1 },
+        compatibleTransports: {
+          type: "array",
+          items: { type: "string" },
+        },
       },
       required: ["to", "message"],
     },
@@ -40,6 +47,8 @@ export function createMyceliumSendTool(db: MyceliumDb) {
         taskId: input.taskId,
         priority: input.priority,
         spawnIfNeeded: input.spawnIfNeeded ?? false,
+        maxAttempts: input.maxAttempts,
+        compatibleTransportIds: input.compatibleTransports,
       });
     },
   };

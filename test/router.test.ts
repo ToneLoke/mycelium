@@ -49,6 +49,31 @@ describe("router", () => {
     ]);
   });
 
+  it("filters resolved candidates by compatible transport", () => {
+    const db = createTestDb();
+    dbs.push(db);
+
+    upsertEndpoint(db, {
+      endpointId: "skipper-gateway",
+      agentId: "skipper",
+      address: "gateway://skipper",
+      transportId: "gateway-send",
+    });
+    upsertEndpoint(db, {
+      endpointId: "skipper-session",
+      agentId: "skipper",
+      address: "session://skipper",
+      transportId: "openclaw-session",
+    });
+
+    const resolved = resolveTargetEndpoints(db, {
+      toAgentId: "skipper",
+      compatibleTransportIds: ["openclaw-session"],
+    });
+
+    expect(resolved.map((entry) => entry.endpoint.endpoint_id)).toEqual(["skipper-session"]);
+  });
+
   it("retries the next healthy endpoint after a transport failure", async () => {
     const db = createTestDb();
     dbs.push(db);
@@ -98,5 +123,41 @@ describe("router", () => {
     const endpointStates = resolveHealthyEndpoints(db, "skipper").map((endpoint) => endpoint.endpoint_id);
     expect(endpointStates).toContain("skipper-b");
     expect(endpointStates).not.toContain("skipper-a");
+  });
+
+  it("stops retrying when maxAttempts is reached", async () => {
+    const db = createTestDb();
+    dbs.push(db);
+
+    upsertEndpoint(db, {
+      endpointId: "skipper-a",
+      agentId: "skipper",
+      address: "session://a",
+    });
+    upsertEndpoint(db, {
+      endpointId: "skipper-b",
+      agentId: "skipper",
+      address: "session://b",
+    });
+
+    const run = vi.fn().mockRejectedValue(new Error("transport offline"));
+
+    const result = await deliverMessage(db, { subagent: { run } }, {
+      fromAgentId: "main",
+      toAgentId: "skipper",
+      messageBody: "Ship it",
+      maxAttempts: 1,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.attemptCount).toBe(1);
+    expect(result.maxAttempts).toBe(1);
+    expect(result.error).toContain("retry policy stopped after 1/1 attempts");
+    expect(run).toHaveBeenCalledTimes(1);
+
+    const delivery = getDelivery(db, result.deliveryId)!;
+    expect(delivery.max_attempts).toBe(1);
+    expect(delivery.attempt_count).toBe(1);
+    expect(delivery.state).toBe("dead_lettered");
   });
 });
