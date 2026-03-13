@@ -1,0 +1,10 @@
+{
+  "id": "mycelium",
+  "name": "Mycelium",
+  "description": "Session routing for multi-agent OpenClaw systems.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

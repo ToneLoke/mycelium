@@ -23,34 +23,44 @@ Implemented now:
 - explicit retry policy controls (`maxAttempts`) and compatible transport filtering (`compatibleTransports`)
 - `agents`, `transport_adapters`, `endpoints`, `conversation_bindings`, `deliveries`, `delivery_attempts`, and `dead_letters` tables
 - lifecycle hooks for `session_start`, `session_end`, `message_sent`, `subagent_spawned`, `subagent_ended`, and `subagent_delivery_target`
-- `/mycelium status` command when the host runtime exposes `registerCommand()`
 - maintenance service for endpoint aging, binding expiry cleanup, and delivery retention cleanup
 
 Not implemented yet:
 - spawn fallback when no live endpoint exists
 - response-level correlation / ack tracking
 - multi-host delivery
+- operator command registration on current OpenClaw command API
 
 That gap is intentional. v1 does real endpoint resolution and delivery journaling, but it does not pretend it can spawn or correlate replies when the runtime does not support it cleanly.
 
 ## Install
 
-This package is still in plugin-scaffold shape. The repo itself is the reliable way to run it right now.
+Use a linked local dev install for the first real activation test.
 
 ```bash
-git clone <repo-url> mycelium
-cd mycelium
+git clone <repo-url> ~/dev/mycelium
+cd ~/dev/mycelium
 npm install
 npm run build
+openclaw plugins install --link ~/dev/mycelium
+openclaw gateway restart
+openclaw plugins doctor
 ```
 
-Then load the built plugin through your local OpenClaw/plugin dev flow.
+Why this flow first:
+- Mycelium ships the OpenClaw plugin metadata expected by the current installer
+- `better-sqlite3` is a native module
+- OpenClaw install flows may use `--ignore-scripts` for safety, which can leave native bindings unbuilt in copied/published installs
+- a linked local repo with a working local `node_modules` is the lowest-risk first activation path
 
-If/when the package is published, the install path should become:
+Recommended trust config for a cleaner local setup:
 
-```bash
-npm install @openclaw/mycelium
-openclaw plugin install @openclaw/mycelium
+```json
+{
+  "plugins": {
+    "allow": ["mycelium"]
+  }
+}
 ```
 
 ## Development
@@ -61,6 +71,21 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+After the initial linked install, the local dev loop is:
+
+```bash
+cd ~/dev/mycelium
+npm run build
+openclaw gateway restart
+openclaw plugins doctor
+```
+
+## Current caveats
+
+- The old `/mycelium status` command was removed from plugin registration for now because its previous contract does not match current OpenClaw command registration.
+- If `better-sqlite3` native bindings are missing, rebuild dependencies in the repo before retrying the linked install.
+- The safest first validation is plugin load + tool registration + hook/service startup, not published-package install.
 
 ## Public tool contract
 

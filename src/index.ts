@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import { createStatusCommand } from "./commands/status.js";
 import { openMyceliumDb } from "./db/connection.js";
 import { seedDefaults } from "./db/seed.js";
 import { createSessionHooks } from "./hooks/session.js";
@@ -11,8 +10,8 @@ export const myceliumPlugin = {
   id: "mycelium",
   name: "Mycelium",
   description: "Session routing for multi-agent OpenClaw systems.",
-  async activate(api: any) {
-    api.logger.info("Mycelium plugin activating");
+  register(api: any) {
+    api.logger.info("Mycelium plugin registering");
 
     const dbPath = join(api.resolvePath("~/.openclaw/state"), "mycelium.db");
     const db = openMyceliumDb(dbPath);
@@ -36,9 +35,9 @@ export const myceliumPlugin = {
     api.on("subagent_ended", subagentHooks.onSubagentEnded);
     api.on("subagent_delivery_target", subagentHooks.onDeliveryTarget);
 
-    if (typeof api.registerCommand === "function") {
-      api.registerCommand(createStatusCommand(db));
-    }
+    // Intentionally skip command registration for now.
+    // The previous command object used an outdated contract and fails on current OpenClaw
+    // with: "Command handler must be a function".
 
     api.registerService(createMaintenanceService(db));
   },
