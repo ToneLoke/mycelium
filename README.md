@@ -13,6 +13,8 @@ Stable agent-to-agent delivery by name, backed by SQLite endpoint tracking and d
 [![SQLite](https://img.shields.io/badge/SQLite-backed-003b57)](#how-it-works)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](#license)
 
+Social preview: `assets/social-card.svg`
+
 </div>
 
 Mycelium is an OpenClaw plugin for routing messages between agents by stable agent ID instead of ephemeral session keys.

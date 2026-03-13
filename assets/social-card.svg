@@ -1,0 +1,79 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Mycelium social preview</title>
+  <desc id="desc">A dark social card for Mycelium with wordmark on the left and a routing topology illustration on the right.</desc>
+  <rect width="1200" height="630" fill="#0B0F0D"/>
+  <rect width="1200" height="630" fill="url(#glow)" opacity="0.62"/>
+
+  <g opacity="0.14" stroke="#173024" stroke-width="1">
+    <path d="M0 128H1200"/>
+    <path d="M0 315H1200"/>
+    <path d="M0 502H1200"/>
+    <path d="M264 0V630"/>
+    <path d="M780 0V630"/>
+    <path d="M1010 0V630"/>
+  </g>
+
+  <g transform="translate(88 0)">
+    <text x="0" y="228" fill="#E7F0EA" font-family="Inter, Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="0.2">Mycelium</text>
+    <text x="0" y="296" fill="#E7F0EA" font-family="Inter, Arial, sans-serif" font-size="36" font-weight="500">Session routing for multi-agent systems.</text>
+    <text x="0" y="354" fill="#9FB0A5" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="500" letter-spacing="0.3">Open routing infrastructure for agent networks</text>
+
+    <g transform="translate(0 416)">
+      <rect x="0" y="0" width="154" height="42" rx="21" fill="#0F1512" stroke="#173024"/>
+      <text x="24" y="27" fill="#8FD68B" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">OpenClaw plugin</text>
+
+      <rect x="170" y="0" width="124" height="42" rx="21" fill="#0F1512" stroke="#173024"/>
+      <text x="194" y="27" fill="#9FB0A5" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">SQLite</text>
+
+      <rect x="310" y="0" width="170" height="42" rx="21" fill="#0F1512" stroke="#173024"/>
+      <text x="334" y="27" fill="#9FB0A5" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="600">Single-host v1</text>
+    </g>
+  </g>
+
+  <g transform="translate(710 0)">
+    <g opacity="0.34" stroke="#365646" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0 318H98"/>
+      <path d="M98 318C138 318 150 258 198 258H292"/>
+      <path d="M98 318C138 318 154 380 208 380H276"/>
+      <path d="M292 258C344 258 362 210 414 210H486"/>
+      <path d="M292 258C334 258 350 296 396 296H470"/>
+      <path d="M276 380C336 380 360 350 410 350H510"/>
+      <path d="M470 296C516 296 538 332 590 332H688"/>
+      <path d="M510 350C560 350 580 396 640 396H724"/>
+      <path d="M188 468C254 468 292 442 356 442H492"/>
+    </g>
+
+    <g stroke="#8FD68B" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0 318H98"/>
+      <path d="M98 318C138 318 150 258 198 258H292"/>
+      <path d="M292 258C344 258 362 210 414 210H486"/>
+      <path d="M470 296C516 296 538 332 590 332H688"/>
+    </g>
+
+    <g fill="#0B0F0D" stroke="#6D8F77" stroke-width="3">
+      <circle cx="98" cy="318" r="9"/>
+      <circle cx="198" cy="258" r="9"/>
+      <circle cx="208" cy="380" r="9"/>
+      <circle cx="292" cy="258" r="9"/>
+      <circle cx="414" cy="210" r="9"/>
+      <circle cx="396" cy="296" r="9"/>
+      <circle cx="410" cy="350" r="9"/>
+      <circle cx="590" cy="332" r="9"/>
+      <circle cx="640" cy="396" r="9"/>
+    </g>
+
+    <g fill="#8FD68B" stroke="#0B0F0D" stroke-width="2.5">
+      <circle cx="98" cy="318" r="8"/>
+      <circle cx="198" cy="258" r="8"/>
+      <circle cx="414" cy="210" r="8"/>
+      <circle cx="590" cy="332" r="8"/>
+    </g>
+  </g>
+
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(940 170) rotate(125.141) scale(501.95 607.029)">
+      <stop stop-color="#173826"/>
+      <stop offset="1" stop-color="#0B0F0D" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
