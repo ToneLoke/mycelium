@@ -17,12 +17,35 @@ export function createMyceliumSendTool() {
         message: { type: "string" },
         taskId: { type: "string" },
         priority: { type: "string", enum: ["low", "normal", "high"] },
-        spawnIfNeeded: { type: "boolean" }
+        spawnIfNeeded: { type: "boolean" },
       },
-      required: ["to", "message"]
+      required: ["to", "message"],
     },
-    async execute(input: MyceliumSendInput) {
-      return { ok: false, todo: true, input };
-    }
+    async execute(input: MyceliumSendInput, ctx?: { runtime?: any; agentId?: string }) {
+      const runtime = ctx?.runtime;
+      if (!runtime?.subagent?.run) {
+        return { ok: false, error: "subagent runtime unavailable", input };
+      }
+
+      const sessionKey = `agent:${input.to}`;
+
+      try {
+        const result = await runtime.subagent.run({
+          sessionKey,
+          message: input.message,
+          deliver: true,
+          idempotencyKey: `mycelium:${ctx?.agentId ?? "unknown"}:${input.to}:${Date.now()}`,
+        });
+
+        return { ok: true, runId: result.runId, target: input.to, sessionKey };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+          target: input.to,
+          input,
+        };
+      }
+    },
   };
 }

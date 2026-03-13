@@ -1,11 +1,21 @@
-export async function onSessionStart(event: unknown, ctx: unknown) {
-  void event;
-  void ctx;
-  // TODO: upsert endpoint in SQLite
-}
+import { markEndpointState, upsertEndpoint } from "../db/endpoints.js";
+import type { MyceliumDb } from "../db/connection.js";
 
-export async function onSessionEnd(event: unknown, ctx: unknown) {
-  void event;
-  void ctx;
-  // TODO: mark endpoint dead
+export function createSessionHooks(db: MyceliumDb) {
+  return {
+    async onSessionStart(event: { sessionId?: string; sessionKey?: string }, ctx: { agentId?: string }) {
+      if (!ctx.agentId || !event.sessionKey) return;
+      upsertEndpoint(db, {
+        endpointId: event.sessionKey,
+        agentId: ctx.agentId,
+        address: event.sessionKey,
+        metadata: JSON.stringify({ sessionId: event.sessionId ?? null }),
+      });
+    },
+
+    async onSessionEnd(event: { sessionKey?: string }) {
+      if (!event.sessionKey) return;
+      markEndpointState(db, event.sessionKey, "dead");
+    },
+  };
 }
