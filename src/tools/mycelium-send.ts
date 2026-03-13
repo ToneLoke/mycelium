@@ -39,7 +39,7 @@ export function createMyceliumSendTool(db: MyceliumDb) {
         messageBody: input.message,
         taskId: input.taskId,
         priority: input.priority,
-        spawnIfNeeded: input.spawnIfNeeded ?? true,
+        spawnIfNeeded: input.spawnIfNeeded ?? false,
       });
     },
   };

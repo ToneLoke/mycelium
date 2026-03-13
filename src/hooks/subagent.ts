@@ -1,82 +1,84 @@
 import { upsertConversationBinding } from "../db/bindings.js";
 import type { MyceliumDb } from "../db/connection.js";
 import { markEndpointState, touchEndpoint, upsertEndpoint } from "../db/endpoints.js";
+import { readNonEmptyString } from "./guards.js";
 
-type SubagentEvent = {
-  sessionId?: string;
-  sessionKey?: string;
-  childSessionId?: string;
-  childSessionKey?: string;
-  childAgentId?: string;
-  parentAgentId?: string;
-  taskId?: string;
-  threadId?: string;
-  channelId?: string;
-  transportId?: string;
-  hostId?: string;
-  targetSessionKey?: string;
-  targetAgentId?: string;
-};
-
-function getSpawnedSessionKey(event: SubagentEvent) {
-  return event.childSessionKey ?? event.sessionKey;
+function getEventValue(event: unknown, key: string) {
+  return readNonEmptyString((event as Record<string, unknown> | undefined)?.[key]);
 }
 
-function getSpawnedAgentId(event: SubagentEvent) {
-  return event.childAgentId ?? event.targetAgentId;
+function getSpawnedSessionKey(event: unknown) {
+  return getEventValue(event, "childSessionKey") ?? getEventValue(event, "sessionKey");
+}
+
+function getSpawnedAgentId(event: unknown) {
+  return getEventValue(event, "childAgentId") ?? getEventValue(event, "targetAgentId");
 }
 
 export function createSubagentHooks(db: MyceliumDb) {
   return {
-    async onSubagentSpawned(event: SubagentEvent, ctx: { agentId?: string }) {
+    async onSubagentSpawned(event: unknown, ctx: { agentId?: string }) {
       const childAgentId = getSpawnedAgentId(event);
       const childSessionKey = getSpawnedSessionKey(event);
+      const transportId = getEventValue(event, "transportId");
+      const hostId = getEventValue(event, "hostId");
+      const parentAgentId = getEventValue(event, "parentAgentId");
+      const childSessionId = getEventValue(event, "childSessionId") ?? getEventValue(event, "sessionId");
+      const taskId = getEventValue(event, "taskId");
+      const threadId = getEventValue(event, "threadId");
+      const channelId = getEventValue(event, "channelId");
+
       if (!childAgentId || !childSessionKey) return;
 
       upsertEndpoint(db, {
         endpointId: childSessionKey,
         agentId: childAgentId,
         address: childSessionKey,
-        transportId: event.transportId ?? "openclaw-session",
-        hostId: event.hostId ?? "local",
+        transportId: transportId ?? "openclaw-session",
+        hostId: hostId ?? "local",
         metadata: JSON.stringify({
-          parentAgentId: event.parentAgentId ?? ctx.agentId ?? null,
-          childSessionId: event.childSessionId ?? event.sessionId ?? null,
+          parentAgentId: parentAgentId ?? ctx.agentId ?? null,
+          childSessionId: childSessionId ?? null,
         }),
       });
 
       upsertConversationBinding(db, {
-        sourceAgentId: event.parentAgentId ?? ctx.agentId,
+        sourceAgentId: parentAgentId ?? ctx.agentId,
         targetAgentId: childAgentId,
         endpointId: childSessionKey,
         scope: {
-          taskId: event.taskId,
-          threadId: event.threadId,
-          channelId: event.channelId,
+          taskId,
+          threadId,
+          channelId,
         },
       });
     },
 
-    async onSubagentEnded(event: SubagentEvent) {
+    async onSubagentEnded(event: unknown) {
       const childSessionKey = getSpawnedSessionKey(event);
       if (!childSessionKey) return;
       markEndpointState(db, childSessionKey, "dead");
     },
 
-    async onDeliveryTarget(event: SubagentEvent, ctx: { agentId?: string }) {
-      const targetAgentId = event.targetAgentId ?? getSpawnedAgentId(event);
-      const targetSessionKey = event.targetSessionKey ?? getSpawnedSessionKey(event);
+    async onDeliveryTarget(event: unknown, ctx: { agentId?: string }) {
+      const targetAgentId = getEventValue(event, "targetAgentId") ?? getSpawnedAgentId(event);
+      const targetSessionKey = getEventValue(event, "targetSessionKey") ?? getSpawnedSessionKey(event);
+      const parentAgentId = getEventValue(event, "parentAgentId");
+      const taskId = getEventValue(event, "taskId");
+      const threadId = getEventValue(event, "threadId");
+      const channelId = getEventValue(event, "channelId");
+
       if (!targetAgentId || !targetSessionKey) return;
 
       touchEndpoint(db, targetSessionKey, { state: "healthy" });
       upsertConversationBinding(db, {
-        sourceAgentId: ctx.agentId ?? event.parentAgentId,
+        sourceAgentId: ctx.agentId ?? parentAgentId,
         targetAgentId,
         endpointId: targetSessionKey,
         scope: {
-          taskId: event.taskId,
-          threadId: event.threadId,
-          channelId: event.channelId,
+          taskId,
+          threadId,
+          channelId,
         },
       });
     },

@@ -1,47 +1,49 @@
 import { upsertConversationBinding } from "../db/bindings.js";
 import type { MyceliumDb } from "../db/connection.js";
 import { markEndpointState, touchEndpoint, upsertEndpoint } from "../db/endpoints.js";
-
-type SessionEvent = {
-  sessionId?: string;
-  sessionKey?: string;
-  threadId?: string;
-  channelId?: string;
-  transportId?: string;
-  hostId?: string;
-};
+import { readNonEmptyString } from "./guards.js";
 
 export function createSessionHooks(db: MyceliumDb) {
   return {
-    async onSessionStart(event: SessionEvent, ctx: { agentId?: string }) {
-      if (!ctx.agentId || !event.sessionKey) return;
+    async onSessionStart(event: unknown, ctx: { agentId?: string }) {
+      const sessionKey = readNonEmptyString((event as Record<string, unknown> | undefined)?.sessionKey);
+      const sessionId = readNonEmptyString((event as Record<string, unknown> | undefined)?.sessionId);
+      const transportId = readNonEmptyString((event as Record<string, unknown> | undefined)?.transportId);
+      const hostId = readNonEmptyString((event as Record<string, unknown> | undefined)?.hostId);
+
+      if (!ctx.agentId || !sessionKey) return;
       upsertEndpoint(db, {
-        endpointId: event.sessionKey,
+        endpointId: sessionKey,
         agentId: ctx.agentId,
-        address: event.sessionKey,
-        transportId: event.transportId ?? "openclaw-session",
-        hostId: event.hostId ?? "local",
-        metadata: JSON.stringify({ sessionId: event.sessionId ?? null }),
+        address: sessionKey,
+        transportId: transportId ?? "openclaw-session",
+        hostId: hostId ?? "local",
+        metadata: JSON.stringify({ sessionId: sessionId ?? null }),
       });
     },
 
-    async onSessionEnd(event: SessionEvent) {
-      if (!event.sessionKey) return;
-      markEndpointState(db, event.sessionKey, "dead");
+    async onSessionEnd(event: unknown) {
+      const sessionKey = readNonEmptyString((event as Record<string, unknown> | undefined)?.sessionKey);
+      if (!sessionKey) return;
+      markEndpointState(db, sessionKey, "dead");
     },
 
-    async onMessageSent(event: SessionEvent, ctx: { agentId?: string }) {
-      if (!event.sessionKey) return;
-      touchEndpoint(db, event.sessionKey, { state: "healthy" });
+    async onMessageSent(event: unknown, ctx: { agentId?: string }) {
+      const sessionKey = readNonEmptyString((event as Record<string, unknown> | undefined)?.sessionKey);
+      const threadId = readNonEmptyString((event as Record<string, unknown> | undefined)?.threadId);
+      const channelId = readNonEmptyString((event as Record<string, unknown> | undefined)?.channelId);
+
+      if (!sessionKey) return;
+      touchEndpoint(db, sessionKey, { state: "healthy" });
 
       if (ctx.agentId) {
         upsertConversationBinding(db, {
           sourceAgentId: ctx.agentId,
           targetAgentId: ctx.agentId,
-          endpointId: event.sessionKey,
+          endpointId: sessionKey,
           scope: {
-            threadId: event.threadId,
-            channelId: event.channelId,
+            threadId,
+            channelId,
           },
           ttlSeconds: 86_400,
         });

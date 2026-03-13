@@ -19,7 +19,7 @@ Mycelium provides:
 ## Current v1 shape
 
 Implemented now:
-- `mycelium_send` tool backed by SQLite endpoint resolution
+- `mycelium_send` tool backed by SQLite endpoint resolution with healthy-endpoint retry
 - `agents`, `transport_adapters`, `endpoints`, `conversation_bindings`, `deliveries`, `delivery_attempts`, and `dead_letters` tables
 - lifecycle hooks for `session_start`, `session_end`, `message_sent`, `subagent_spawned`, `subagent_ended`, and `subagent_delivery_target`
 - `/mycelium status` command when the host runtime exposes `registerCommand()`
@@ -55,7 +55,7 @@ mycelium_send({
   message: "What broke in CI?",
   taskId: "OPS-12",
   priority: "high",
-  spawnIfNeeded: true,
+  spawnIfNeeded: false,
 });
 ```
 
@@ -64,8 +64,9 @@ Send flow:
 2. check for a task-scoped conversation binding
 3. resolve the best healthy endpoint from SQLite
 4. dispatch through `runtime.subagent.run()`
-5. record attempt/result and update endpoint health
-6. dead-letter if no endpoint exists or transport delivery fails
+5. retry the next healthy endpoint if one transport attempt fails
+6. record attempts/results and update endpoint health
+7. dead-letter if no endpoint exists or all healthy endpoints fail
 
 ## Architecture summary
 
