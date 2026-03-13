@@ -1,0 +1,65 @@
+<svg width="1600" height="400" viewBox="0 0 1600 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Mycelium — Session routing for multi-agent systems.</title>
+  <desc id="desc">A dark graphite hero banner with the Mycelium wordmark on the left and a sparse routing topology graphic on the right.</desc>
+  <rect width="1600" height="400" fill="#0B0F0D"/>
+  <rect width="1600" height="400" fill="url(#bgGlow)" opacity="0.55"/>
+
+  <g opacity="0.18" stroke="#173024" stroke-width="1">
+    <path d="M0 92H1600"/>
+    <path d="M0 200H1600"/>
+    <path d="M0 308H1600"/>
+    <path d="M220 0V400"/>
+    <path d="M960 0V400"/>
+    <path d="M1320 0V400"/>
+  </g>
+
+  <g transform="translate(96 0)">
+    <text x="0" y="148" fill="#E7F0EA" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="700" letter-spacing="0.2">Mycelium</text>
+    <text x="0" y="204" fill="#E7F0EA" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500">Session routing for multi-agent systems.</text>
+    <text x="0" y="242" fill="#9FB0A5" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="500" letter-spacing="0.3">Open routing infrastructure for agent networks</text>
+  </g>
+
+  <g transform="translate(760 0)">
+    <g opacity="0.36" stroke="#365646" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0 210H136"/>
+      <path d="M136 210C180 210 194 168 238 168H360"/>
+      <path d="M136 210C176 210 194 248 236 248H316"/>
+      <path d="M360 168C424 168 448 142 500 142H624"/>
+      <path d="M360 168C412 168 434 198 482 198H544"/>
+      <path d="M316 248C376 248 404 230 456 230H548"/>
+      <path d="M456 230C516 230 544 258 604 258H704"/>
+      <path d="M520 310C574 310 600 280 644 280H728"/>
+      <path d="M124 292C180 292 224 310 284 310H520"/>
+    </g>
+
+    <g stroke="#8FD68B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0 210H136"/>
+      <path d="M136 210C180 210 194 168 238 168H360"/>
+      <path d="M360 168C424 168 448 142 500 142H624"/>
+    </g>
+
+    <g fill="#0B0F0D" stroke="#6D8F77" stroke-width="2">
+      <circle cx="136" cy="210" r="6"/>
+      <circle cx="238" cy="168" r="6"/>
+      <circle cx="236" cy="248" r="6"/>
+      <circle cx="360" cy="168" r="6"/>
+      <circle cx="456" cy="230" r="6"/>
+      <circle cx="520" cy="310" r="6"/>
+      <circle cx="624" cy="142" r="6"/>
+      <circle cx="704" cy="258" r="6"/>
+    </g>
+
+    <g fill="#8FD68B" stroke="#0B0F0D" stroke-width="1.5">
+      <circle cx="136" cy="210" r="5.5"/>
+      <circle cx="238" cy="168" r="5.5"/>
+      <circle cx="624" cy="142" r="5.5"/>
+    </g>
+  </g>
+
+  <defs>
+    <radialGradient id="bgGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1240 100) rotate(127.875) scale(520.64 686.884)">
+      <stop stop-color="#163222"/>
+      <stop offset="1" stop-color="#0B0F0D" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

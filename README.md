@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="./assets/hero-banner.svg" alt="Mycelium — Session routing for multi-agent systems." width="100%">
+
 Session routing for multi-agent OpenClaw systems.
 
 Stable agent-to-agent delivery by name, backed by SQLite endpoint tracking and delivery journaling.

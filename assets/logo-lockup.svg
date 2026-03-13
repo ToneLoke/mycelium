@@ -1,0 +1,35 @@
+<svg width="560" height="140" viewBox="0 0 560 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Mycelium logo lockup</title>
+  <desc id="desc">Mycelium wordmark with branching routing glyph.</desc>
+  <rect width="560" height="140" rx="24" fill="#0B0F0D"/>
+  <g transform="translate(28 22)">
+    <g>
+      <rect width="96" height="96" rx="20" fill="#0F1512"/>
+      <rect x="1" y="1" width="94" height="94" rx="19" stroke="#173024" stroke-width="2"/>
+      <g stroke-linecap="round" stroke-linejoin="round">
+        <g stroke="#426754" stroke-width="6" opacity="0.45">
+          <path d="M14 48H34"/>
+          <path d="M34 48C46 48 48 30 60 30H76"/>
+          <path d="M34 48C46 48 48 66 60 66H84"/>
+        </g>
+        <g stroke="#8FD68B" stroke-width="7">
+          <path d="M14 48H34"/>
+          <path d="M34 48C46 48 48 30 60 30H76"/>
+        </g>
+      </g>
+      <g fill="#0F1512" stroke="#6D8F77" stroke-width="2.5">
+        <circle cx="34" cy="48" r="5"/>
+        <circle cx="60" cy="30" r="5"/>
+        <circle cx="60" cy="66" r="5"/>
+      </g>
+      <g fill="#8FD68B" stroke="#0F1512" stroke-width="1.5">
+        <circle cx="34" cy="48" r="4.5"/>
+        <circle cx="60" cy="30" r="4.5"/>
+      </g>
+    </g>
+    <g transform="translate(124 0)">
+      <text x="0" y="43" fill="#E7F0EA" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="700">Mycelium</text>
+      <text x="0" y="74" fill="#9FB0A5" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="500">Session routing for multi-agent systems.</text>
+    </g>
+  </g>
+</svg>
