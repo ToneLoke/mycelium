@@ -12,37 +12,60 @@ Mycelium provides:
 - name-based agent routing
 - SQLite-backed endpoint registry
 - event-driven session tracking via OpenClaw hooks
-- delivery journal and retry logic
-- background cleanup for stale endpoints
+- delivery journal and dead-letter tracking
+- conversation bindings for task-scoped continuity
+- background cleanup for stale endpoints and expired bindings
 
-## What problem it solves
+## Current v1 shape
 
-Without Mycelium, agent-to-agent communication depends on ephemeral session keys or unreliable fire-and-forget messaging. That leads to dropped work, stale status, and humans acting as the relay layer.
+Implemented now:
+- `mycelium_send` tool backed by SQLite endpoint resolution
+- `agents`, `transport_adapters`, `endpoints`, `conversation_bindings`, `deliveries`, `delivery_attempts`, and `dead_letters` tables
+- lifecycle hooks for `session_start`, `session_end`, `message_sent`, `subagent_spawned`, `subagent_ended`, and `subagent_delivery_target`
+- `/mycelium status` command when the host runtime exposes `registerCommand()`
+- maintenance service for endpoint aging, binding expiry cleanup, and delivery retention cleanup
 
-Mycelium turns that into:
-- `mycelium_send("krash", "What's the E2E status?")`
-- resolve the best live endpoint
-- deliver or retry
-- spawn if needed
-- keep continuity by task or thread
+Not implemented yet:
+- spawn fallback when no live endpoint exists
+- response-level correlation / ack tracking
+- multi-host delivery
 
-## Planned install
+That gap is intentional. v1 does real endpoint resolution and delivery journaling, but it does not pretend it can spawn or correlate replies when the runtime does not support it cleanly.
+
+## Install
 
 ```bash
+npm install @openclaw/mycelium
 openclaw plugin install @openclaw/mycelium
 ```
 
-## Planned capabilities
+## Development
 
-- Native `mycelium_send` agent tool
-- Plugin hook integration for session lifecycle tracking
-- SQLite registry for endpoints, bindings, and deliveries
-- Background maintenance service for aging and cleanup
-- Human status command for reachability and health
+```bash
+npm install
+npm run typecheck
+npm run build
+```
 
-## Status
+## Example
 
-Design complete. Implementation next.
+```ts
+mycelium_send({
+  to: "krash",
+  message: "What broke in CI?",
+  taskId: "OPS-12",
+  priority: "high",
+  spawnIfNeeded: true,
+});
+```
+
+Send flow:
+1. create a delivery record
+2. check for a task-scoped conversation binding
+3. resolve the best healthy endpoint from SQLite
+4. dispatch through `runtime.subagent.run()`
+5. record attempt/result and update endpoint health
+6. dead-letter if no endpoint exists or transport delivery fails
 
 ## Architecture summary
 
@@ -50,8 +73,16 @@ Design complete. Implementation next.
 - **SQLite-backed**
 - **Event-driven**
 - **Single-host v1**
-- **Multi-host later**
+- **Honest about unsupported runtime paths**
 
-## Vision
+## Local state
 
-Mycelium becomes the session routing layer for serious OpenClaw multi-agent deployments.
+Mycelium stores its SQLite database at:
+
+```text
+~/.openclaw/state/mycelium.db
+```
+
+## License
+
+Apache-2.0

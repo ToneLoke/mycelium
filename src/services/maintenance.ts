@@ -1,4 +1,6 @@
+import { pruneExpiredBindings } from "../db/bindings.js";
 import type { MyceliumDb } from "../db/connection.js";
+import { pruneHistoricalDeliveries } from "../db/deliveries.js";
 
 export function createMaintenanceService(db: MyceliumDb) {
   let timer: NodeJS.Timeout | null = null;
@@ -30,6 +32,9 @@ export function createMaintenanceService(db: MyceliumDb) {
              AND last_seen_at IS NOT NULL
              AND last_seen_at < datetime('now', '-24 hours')`,
         ).run();
+
+        pruneExpiredBindings(db);
+        pruneHistoricalDeliveries(db);
       };
 
       tick();

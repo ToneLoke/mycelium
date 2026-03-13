@@ -1,3 +1,6 @@
+import type { MyceliumDb } from "../db/connection.js";
+import { deliverMessage } from "../router/deliver.js";
+
 export type MyceliumSendInput = {
   to: string;
   message: string;
@@ -6,7 +9,7 @@ export type MyceliumSendInput = {
   spawnIfNeeded?: boolean;
 };
 
-export function createMyceliumSendTool() {
+export function createMyceliumSendTool(db: MyceliumDb) {
   return {
     name: "mycelium_send",
     description: "Send a message to another agent by stable name.",
@@ -22,30 +25,22 @@ export function createMyceliumSendTool() {
       required: ["to", "message"],
     },
     async execute(input: MyceliumSendInput, ctx?: { runtime?: any; agentId?: string }) {
-      const runtime = ctx?.runtime;
-      if (!runtime?.subagent?.run) {
-        return { ok: false, error: "subagent runtime unavailable", input };
+      if (!input.to.trim()) {
+        return { ok: false, error: "target agent is required" };
       }
 
-      const sessionKey = `agent:${input.to}`;
-
-      try {
-        const result = await runtime.subagent.run({
-          sessionKey,
-          message: input.message,
-          deliver: true,
-          idempotencyKey: `mycelium:${ctx?.agentId ?? "unknown"}:${input.to}:${Date.now()}`,
-        });
-
-        return { ok: true, runId: result.runId, target: input.to, sessionKey };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error instanceof Error ? error.message : String(error),
-          target: input.to,
-          input,
-        };
+      if (!input.message.trim()) {
+        return { ok: false, error: "message is required" };
       }
+
+      return deliverMessage(db, ctx?.runtime, {
+        fromAgentId: ctx?.agentId,
+        toAgentId: input.to.trim(),
+        messageBody: input.message,
+        taskId: input.taskId,
+        priority: input.priority,
+        spawnIfNeeded: input.spawnIfNeeded ?? true,
+      });
     },
   };
 }
