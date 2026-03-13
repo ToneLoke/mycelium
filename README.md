@@ -63,23 +63,30 @@ That boundary is deliberate. If there is no live compatible endpoint, v1 records
 
 ## Install
 
-Use a linked local install for the first real activation test.
+Clone the repo anywhere you want, then run the install steps from the cloned directory.
 
 ```bash
-git clone <repo-url> ~/dev/mycelium
-cd ~/dev/mycelium
+git clone https://github.com/ToneLoke/mycelium.git
+cd mycelium
 npm install
 npm run build
-openclaw plugins install --link ~/dev/mycelium
+openclaw plugins install --link "$PWD"
 openclaw gateway restart
 openclaw plugins doctor
 ```
 
-Why this is the safest first path:
+If you already cloned the repo somewhere else, the linked install step is still just:
+
+```bash
+cd /path/to/your/mycelium-clone
+openclaw plugins install --link "$PWD"
+```
+
+Why this is the safest first path right now:
 - Mycelium ships OpenClaw plugin metadata directly from the repo
 - `better-sqlite3` is a native module
 - some install flows may use `--ignore-scripts`, which can leave native bindings unbuilt in copied or published installs
-- a linked repo with known-good local `node_modules` is the lowest-risk activation path right now
+- a linked repo with known-good local `node_modules` is the lowest-risk activation path currently documented for Mycelium
 
 Recommended trust config:
 
@@ -93,11 +100,12 @@ Recommended trust config:
 
 ## Quick start
 
-1. Install and link the plugin locally
+1. Clone and install the repo locally
 2. Build it once with `npm run build`
-3. Restart the OpenClaw gateway
-4. Confirm plugin load with `openclaw plugins doctor`
-5. Call `mycelium_send` from an agent session
+3. Link the plugin with `openclaw plugins install --link "$PWD"`
+4. Restart the OpenClaw gateway
+5. Confirm plugin load with `openclaw plugins doctor`
+6. Call `mycelium_send` from an agent session
 
 Example:
 
@@ -158,10 +166,9 @@ npm test
 npm run build
 ```
 
-Typical dev loop after the first linked install:
+Typical dev loop from your clone:
 
 ```bash
-cd ~/dev/mycelium
 npm run build
 openclaw gateway restart
 openclaw plugins doctor
@@ -178,12 +185,24 @@ openclaw plugins doctor
 
 ## Roadmap
 
-Near-term obvious next steps:
-- Add safe spawn fallback once runtime support is clean enough to rely on
-- Add response correlation and acknowledgment tracking
-- Add better operational visibility around routing health and dead letters
-- Revisit command registration when the current OpenClaw command contract is stable
-- Explore multi-host routing after the single-host model is solid
+See [ROADMAP.md](./ROADMAP.md) for the current direction and near-term priorities.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Suggested GitHub metadata
+
+Suggested repository description:
+- `Session routing for multi-agent OpenClaw systems.`
+
+Suggested repository topics:
+- `openclaw`
+- `multi-agent`
+- `agent-routing`
+- `sqlite`
+- `typescript`
+- `plugin`
 
 ## Architecture shape
 
@@ -199,7 +218,9 @@ Near-term obvious next steps:
 - Source: [`src/index.ts`](./src/index.ts)
 - Tests: [`test/`](./test)
 - Package metadata: [`package.json`](./package.json)
+- Roadmap: [`ROADMAP.md`](./ROADMAP.md)
+- Contributing: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 
 ## License
 
-Apache-2.0
+Apache-2.0 — see [`LICENSE`](./LICENSE).
